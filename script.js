@@ -40,30 +40,42 @@ function actualizarInterfaz() {
   
   let incBs = 0, incUsd = 0, gastBs = 0, gastUsd = 0, invBs = 0, invUsd = 0;
 
-  // Procesar Transacciones
-  const listaOrdenada = [...transacciones].reverse();
-  listaOrdenada.forEach((t) => {
-    const m = parseFloat(t.monto) || 0;
-    if (t.tipo === 'ingreso') t.moneda === 'Bs' ? incBs += m : incUsd += m;
-    else t.moneda === 'Bs' ? gastBs += m : gastUsd += m;
+  // Unimos ambos arrays para la tabla
+  const lista = [
+    ...transacciones.map(t => ({ ...t, origen: 'transacciones' })),
+    ...inversiones.map(i => ({ ...i, origen: 'inversiones' }))
+  ];
 
+  // Ordenar por fecha (asumiendo que Firebase guarda los IDs en orden, o simplemente ordenar)
+  lista.reverse().forEach((item) => {
+    const esInversion = item.origen === 'inversiones';
+    const m = parseFloat(esInversion ? item.montoInversion : item.monto) || 0;
+    const mon = esInversion ? item.monedaInversion : item.moneda;
+    const tipo = esInversion ? 'Inversión' : item.tipo;
+    const cat = esInversion ? item.tipoInversion : item.categoria;
+    const desc = esInversion ? item.descripcionInversion : item.descripcion;
+    const miembro = esInversion ? item.miembroInversion : item.miembro;
+
+    // Sumar totales
+    if (!esInversion) {
+      if (item.tipo === 'ingreso') mon === 'Bs' ? incBs += m : incUsd += m;
+      else mon === 'Bs' ? gastBs += m : gastUsd += m;
+    } else {
+      mon === 'Bs' ? invBs += m : invUsd += m;
+    }
+
+    // Dibujar fila
     const fila = document.createElement("tr");
     fila.innerHTML = `
-      <td>${t.fecha}</td>
-      <td><span class="badge badge--${t.tipo}">${t.tipo}</span></td>
-      <td>${t.categoria}</td>
-      <td>${t.descripcion || '-'}</td>
-      <td><strong>${t.miembro}</strong></td>
-      <td class="col-monto">${t.moneda} ${m.toFixed(2)}</td>
-      <td><button class="btn-delete" onclick="eliminarTransaccion('${t.id}')">❌</button></td>
+      <td>${item.fecha}</td>
+      <td><span class="badge">${tipo}</span></td>
+      <td>${cat}</td>
+      <td>${desc || '-'}</td>
+      <td><strong>${miembro}</strong></td>
+      <td class="col-monto">${mon} ${m.toFixed(2)}</td>
+      <td><button class="btn-delete" onclick="eliminar('${item.id}', '${item.origen}')">❌</button></td>
     `;
     cuerpoHistorial.appendChild(fila);
-  });
-
-  // Procesar Inversiones
-  inversiones.forEach((i) => {
-    const m = parseFloat(i.montoInversion) || 0;
-    i.monedaInversion === 'Bs' ? invBs += m : invUsd += m;
   });
 
   // Actualizar Dashboard
@@ -72,8 +84,8 @@ function actualizarInterfaz() {
   document.getElementById("balanceActual").innerHTML = `${(incBs - gastBs - invBs).toFixed(2)} Bs / ${(incUsd - gastUsd - invUsd).toFixed(2)} $`;
   document.getElementById("totalInvertido").innerHTML = `${invBs.toFixed(2)} Bs / ${invUsd.toFixed(2)} $`;
   
-  contadorMovimientos.textContent = `${transacciones.length + inversiones.length} registros`;
-  estadoVacio.style.display = (transacciones.length + inversiones.length) === 0 ? "block" : "none";
+  contadorMovimientos.textContent = `${lista.length} registros`;
+  estadoVacio.style.display = lista.length === 0 ? "block" : "none";
 }
 
 // ==========================================================================
@@ -108,14 +120,6 @@ document.getElementById("formInversion").addEventListener('submit', (e) => {
 
 window.eliminar = (id, origen) => {
   if (confirm("¿Seguro que quieres borrar este registro?")) {
-    // Firebase necesita la ruta exacta: "transacciones/ID" o "inversiones/ID"
-    db.ref(origen + '/' + id).remove()
-      .then(() => {
-        console.log("Registro borrado con éxito de: " + origen);
-      })
-      .catch((error) => {
-        console.error("Error al borrar: ", error);
-        alert("No se pudo borrar, intenta de nuevo.");
-      });
+    db.ref(origen + '/' + id).remove();
   }
 };
