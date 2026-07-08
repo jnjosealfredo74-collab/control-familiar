@@ -1,7 +1,10 @@
-// 1. CONFIGURACIÓN FIREBASE (LO QUE YA TENÍAS)
+// ==========================================================================
+// CONFIGURACIÓN DE FIREBASE
+// ==========================================================================
 const firebaseConfig = {
   databaseURL: "https://control-familiar-760ec-default-rtdb.firebaseio.com/"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const refTransacciones = db.ref('transacciones');
@@ -10,56 +13,82 @@ const refInversiones = db.ref('inversiones');
 let transacciones = [];
 let inversiones = [];
 
-// 2. ESCUCHAR LA NUBE (AQUÍ ES DONDE LOS CELULARES SE SINCRONIZAN)
+// ==========================================================================
+// ESCUCHAR CAMBIOS EN TIEMPO REAL
+// ==========================================================================
 refTransacciones.on('value', (snapshot) => {
   const datos = snapshot.val();
   transacciones = datos ? Object.keys(datos).map(id => ({ id, ...datos[id] })) : [];
-  renderizarTodo();
+  actualizarInterfaz();
 });
 
 refInversiones.on('value', (snapshot) => {
   const datos = snapshot.val();
   inversiones = datos ? Object.keys(datos).map(id => ({ id, ...datos[id] })) : [];
-  renderizarTodo();
+  actualizarInterfaz();
 });
 
-// 3. LÓGICA DE RENDERIZADO (ESTO DIBUJA LA TABLA Y EL DASHBOARD)
-function renderizarTodo() {
+// ==========================================================================
+// LÓGICA DE ACTUALIZACIÓN DE INTERFAZ
+// ==========================================================================
+function actualizarInterfaz() {
   const cuerpoHistorial = document.getElementById("cuerpoHistorial");
+  const estadoVacio = document.getElementById("estadoVacio");
+  const contadorMovimientos = document.getElementById("contadorMovimientos");
+  
   cuerpoHistorial.innerHTML = "";
   
-  // Unimos todo para mostrar en la tabla
-  const todos = [...transacciones.map(t=>({...t, origen:'transacciones'})), ...inversiones.map(i=>({...i, origen:'inversiones'}))];
-  
-  todos.sort((a,b) => b.fechaRegistro - a.fechaRegistro).forEach(mov => {
+  let incBs = 0, incUsd = 0, gastBs = 0, gastUsd = 0, invBs = 0, invUsd = 0;
+
+  // Procesar Transacciones
+  const listaOrdenada = [...transacciones].reverse();
+  listaOrdenada.forEach((t) => {
+    const m = parseFloat(t.monto) || 0;
+    if (t.tipo === 'ingreso') t.moneda === 'Bs' ? incBs += m : incUsd += m;
+    else t.moneda === 'Bs' ? gastBs += m : gastUsd += m;
+
     const fila = document.createElement("tr");
     fila.innerHTML = `
-      <td>${mov.fecha}</td>
-      <td>${mov.tipo || 'Inversión'}</td>
-      <td>${mov.categoria || mov.tipoInversion}</td>
-      <td>${mov.descripcion || '-'}</td>
-      <td>${mov.miembro}</td>
-      <td>${mov.monto} ${mov.moneda}</td>
-      <td><button onclick="eliminar('${mov.id}', '${mov.origen}')">❌</button></td>
+      <td>${t.fecha}</td>
+      <td><span class="badge badge--${t.tipo}">${t.tipo}</span></td>
+      <td>${t.categoria}</td>
+      <td>${t.descripcion || '-'}</td>
+      <td><strong>${t.miembro}</strong></td>
+      <td class="col-monto">${t.moneda} ${m.toFixed(2)}</td>
+      <td><button class="btn-delete" onclick="eliminarTransaccion('${t.id}')">❌</button></td>
     `;
     cuerpoHistorial.appendChild(fila);
   });
+
+  // Procesar Inversiones
+  inversiones.forEach((i) => {
+    const m = parseFloat(i.montoInversion) || 0;
+    i.monedaInversion === 'Bs' ? invBs += m : invUsd += m;
+  });
+
+  // Actualizar Dashboard
+  document.getElementById("totalIngresos").innerHTML = `${incBs.toFixed(2)} Bs / ${incUsd.toFixed(2)} $`;
+  document.getElementById("totalGastos").innerHTML = `${gastBs.toFixed(2)} Bs / ${gastUsd.toFixed(2)} $`;
+  document.getElementById("balanceActual").innerHTML = `${(incBs - gastBs - invBs).toFixed(2)} Bs / ${(incUsd - gastUsd - invUsd).toFixed(2)} $`;
+  document.getElementById("totalInvertido").innerHTML = `${invBs.toFixed(2)} Bs / ${invUsd.toFixed(2)} $`;
   
-  document.getElementById("contadorMovimientos").textContent = `${todos.length} registros`;
+  contadorMovimientos.textContent = `${transacciones.length + inversiones.length} registros`;
+  estadoVacio.style.display = (transacciones.length + inversiones.length) === 0 ? "block" : "none";
 }
 
-// 4. ENVÍO DE DATOS A LA NUBE
+// ==========================================================================
+// EVENTOS DE FORMULARIOS Y ELIMINACIÓN
+// ==========================================================================
 document.getElementById("formTransaccion").addEventListener('submit', (e) => {
   e.preventDefault();
   refTransacciones.push({
-    tipo: document.getElementById("tipo").value,
-    moneda: document.getElementById("monedaMovimiento").value,
-    monto: document.getElementById("monto").value,
-    categoria: document.getElementById("categoria").value,
-    descripcion: document.getElementById("descripcion").value,
-    miembro: document.getElementById("miembro").value,
-    fecha: new Date().toLocaleDateString(),
-    fechaRegistro: Date.now()
+    fecha: new Date().toLocaleDateString('es-ES'),
+    tipo: document.getElementById('tipo').value,
+    moneda: document.getElementById('monedaMovimiento').value,
+    monto: parseFloat(document.getElementById('monto').value),
+    categoria: document.getElementById('categoria').value,
+    descripcion: document.getElementById('descripcion').value || '-',
+    miembro: document.getElementById('miembro').value
   });
   e.target.reset();
 });
@@ -67,18 +96,16 @@ document.getElementById("formTransaccion").addEventListener('submit', (e) => {
 document.getElementById("formInversion").addEventListener('submit', (e) => {
   e.preventDefault();
   refInversiones.push({
-    tipoInversion: document.getElementById("tipoInversion").value,
-    moneda: document.getElementById("monedaInversion").value,
-    monto: document.getElementById("montoInversion").value,
-    descripcion: document.getElementById("descripcionInversion").value,
-    miembro: document.getElementById("miembroInversion").value,
-    fecha: new Date().toLocaleDateString(),
-    fechaRegistro: Date.now()
+    fecha: new Date().toLocaleDateString('es-ES'),
+    monedaInversion: document.getElementById('monedaInversion').value,
+    montoInversion: parseFloat(document.getElementById('montoInversion').value),
+    tipoInversion: document.getElementById('tipoInversion').value,
+    descripcionInversion: document.getElementById('descripcionInversion').value || '-',
+    miembroInversion: document.getElementById('miembroInversion').value
   });
   e.target.reset();
 });
 
-// 5. FUNCIÓN ELIMINAR
-window.eliminar = (id, origen) => {
-  if(confirm("¿Borrar registro?")) db.ref(origen + '/' + id).remove();
+window.eliminarTransaccion = (id) => {
+  if(confirm("¿Borrar este registro?")) db.ref('transacciones/' + id).remove();
 };
