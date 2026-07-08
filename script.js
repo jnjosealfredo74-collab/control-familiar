@@ -106,6 +106,16 @@ document.getElementById("formInversion").addEventListener('submit', (e) => {
   e.target.reset();
 });
 
-window.eliminarTransaccion = (id) => {
-  if(confirm("¿Borrar este registro?")) db.ref('transacciones/' + id).remove();
+window.eliminar = (id, origen) => {
+  if (confirm("¿Seguro que quieres borrar este registro?")) {
+    // Firebase necesita la ruta exacta: "transacciones/ID" o "inversiones/ID"
+    db.ref(origen + '/' + id).remove()
+      .then(() => {
+        console.log("Registro borrado con éxito de: " + origen);
+      })
+      .catch((error) => {
+        console.error("Error al borrar: ", error);
+        alert("No se pudo borrar, intenta de nuevo.");
+      });
+  }
 };
