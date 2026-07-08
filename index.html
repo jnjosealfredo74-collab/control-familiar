@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control Financiero Familiar</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-content">
+      <h1>Control Financiero <span>Familiar</span></h1>
+      <p class="subtitle">Ingresos, gastos e inversiones de la familia, en un solo lugar</p>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section class="dashboard" aria-label="Resumen financiero">
+      <div class="card card--ingresos">
+        <span class="card-label">Total Ingresos</span>
+        <span class="card-value" id="totalIngresos">0,00 Bs / 0.00 $</span>
+      </div>
+
+      <div class="card card--gastos">
+        <span class="card-label">Total Gastos</span>
+        <span class="card-value" id="totalGastos">0,00 Bs / 0.00 $</span>
+      </div>
+
+      <div class="card card--balance">
+        <span class="card-label">Balance Disponible</span>
+        <span class="card-value" id="balanceActual">0,00 Bs / 0.00 $</span>
+      </div>
+
+      <div class="card card--inversion">
+        <span class="card-label">Total Invertido</span>
+        <span class="card-value" id="totalInvertido">0,00 Bs / 0.00 $</span>
+      </div>
+    </section>
+
+    <section class="forms-grid">
+
+      <div class="panel">
+        <h2 class="panel-title">Registrar Movimiento</h2>
+        <form id="formTransaccion" class="form">
+
+          <div class="form-row">
+            <label for="tipo">Tipo</label>
+            <select id="tipo" required>
+              <option value="ingreso">Ingreso</option>
+              <option value="gasto">Gasto</option>
+            </select>
+          </div>
+            
+          <div class="form-row">
+            <label for="monedaMovimiento">Moneda</label>
+            <select id="monedaMovimiento" required>
+              <option value="Bs">Boliviano (Bs)</option>
+              <option value="$">Dólar ($)</option>
+            </select>
+          </div> 
+      
+          <div class="form-row">
+            <label for="monto">Monto</label>
+            <input type="number" id="monto" placeholder="0.00" min="0.01" step="0.01" required />
+          </div>
+
+          <div class="form-row">
+            <label for="categoria">Categoría</label>
+            <select id="categoria" required>
+              <option value="Comida">Comida</option>
+              <option value="Servicios">Servicios</option>
+              <option value="Moto">Moto / Transporte</option>
+              <option value="Educación">Educación</option>
+              <option value="Salud">Salud</option>
+              <option value="Hogar">Hogar</option>
+              <option value="Ocio">Ocio</option>
+              <option value="Sueldo">Sueldo</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="descripcion">Descripción</label>
+            <input type="text" id="descripcion" placeholder="Ej: Compra en el mercado" />
+          </div>
+
+          <div class="form-row">
+            <label for="miembro">Miembro de la familia</label>
+            <input type="text" id="miembro" placeholder="Ej: Mamá, Papá, Ana..." required />
+          </div>
+
+          <button type="submit" class="btn btn-primary">Agregar Movimiento</button>
+        </form>
+      </div>
+
+      <div class="panel panel--inversion">
+        <h2 class="panel-title">Registrar Inversión</h2>
+        <form id="formInversion" class="form">
+
+          <div class="form-row">
+            <label for="monedaInversion">Moneda</label>
+            <select id="monedaInversion" required>
+              <option value="Bs">Boliviano (Bs)</option>
+              <option value="$">Dólar ($)</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="montoInversion">Monto a invertir</label>
+            <input type="number" id="montoInversion" placeholder="0.00" min="0.01" step="0.01" required />
+          </div>
+
+          <div class="form-row">
+            <label for="tipoInversion">Tipo de inversión</label>
+            <select id="tipoInversion" required>
+              <option value="Plazo Fijo">Plazo Fijo</option>
+              <option value="Fondos">Fondos de Inversión</option>
+              <option value="Proyecto">Proyecto Propio</option>
+              <option value="Acciones">Acciones</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="descripcionInversion">Descripción</label>
+            <input type="text" id="descripcionInversion" placeholder="Ej: Plazo fijo a 90 días" />
+          </div>
+
+          <div class="form-row">
+            <label for="miembroInversion">Miembro de la familia</label>
+            <input type="text" id="miembroInversion" placeholder="Ej: Papá" required />
+          </div>
+
+          <button type="submit" class="btn btn-invest">Agregar Inversión</button>
+        </form>
+      </div>
+
+    </section>
+
+    <section class="panel panel--historial">
+      <div class="historial-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 class="panel-title" style="margin: 0;">Historial de Movimientos</h2>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <span class="historial-count" id="contadorMovimientos">0 registros</span>
+          <button id="btnExportarExcel" class="btn" style="background-color: #107c41; color: white; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            📊 Descargar Excel
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="tabla-historial">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th>Categoría</th>
+              <th>Descripción</th>
+              <th>Miembro</th>
+              <th class="col-monto">Monto</th>
+              <th class="col-accion">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpoHistorial">
+            </tbody>
+        </table>
+
+        <p class="empty-state" id="estadoVacio">Todavía no hay movimientos registrados. Agrega el primero arriba ✍️</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>Tus datos se guardan únicamente en este navegador (LocalStorage). No se envían a ningún servidor.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
