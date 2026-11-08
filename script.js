@@ -1,7 +1,7 @@
 // ==========================================================================
 // CONFIGURACIÓN DE FIREBASE (CONEXIÓN EN LA NUBE EN TIEMPO REAL)
 // ==========================================================================
-// REEMPLAZA esta URL con la que te dé tu consola de Firebase Realtime Database:
+// URL exacta de tu Realtime Database de Firebase
 const BASE_DATOS_URL = "https://control-familiar-760ec-default-rtdb.firebaseio.com/";
 
 const firebaseConfig = {
@@ -21,7 +21,7 @@ let transacciones = [];
 let inversiones = [];
 
 // ==========================================================================
-// REFERENCIAS AL DOM (SISTEMA ORIGINAL)
+// REFERENCIAS AL DOM (ELEMENTOS DE LA PÁGINA)
 // ==========================================================================
 const formTransaccion = document.getElementById("formTransaccion");
 const formInversion = document.getElementById("formInversion");
@@ -36,11 +36,10 @@ const estadoVacio = document.getElementById("estadoVacio");
 const contadorMovimientos = document.getElementById("contadorMovimientos");
 
 // ==========================================================================
-// ESCUCHAR CAMBIOS EN TIEMPO REAL (SINCRONIZACIÓN AUTOMÁTICA MULTI-CELULAR)
+// ESCUCHAR CAMBIOS EN TIEMPO REAL (SINCRONIZACIÓN EN LA NUBE)
 // ==========================================================================
 refTransacciones.on('value', (snapshot) => {
   const datos = snapshot.val();
-  // Transformar la estructura de Firebase asignándole su ID único a cada fila
   transacciones = datos ? Object.keys(datos).map(id => ({ id, ...datos[id] })) : [];
   actualizarInterfaz();
 });
@@ -62,7 +61,6 @@ function actualizarInterfaz() {
   let gastBs = 0, gastUsd = 0;
   let invBs = 0, invUsd = 0;
 
-  // 1. Renderizar Transacciones en la Tabla
   const totalRegistros = transacciones.length + inversiones.length;
 
   if (totalRegistros === 0) {
@@ -72,7 +70,7 @@ function actualizarInterfaz() {
     estadoVacio.style.display = "none";
     contadorMovimientos.textContent = `${totalRegistros} registro(s) totales`;
 
-    // Renderizar Transacciones
+    // 1. Renderizar Transacciones en el Historial
     const listaTransaccionesOrdenada = [...transacciones].reverse();
     listaTransaccionesOrdenada.forEach((t) => {
       const montoNum = parseFloat(t.monto) || 0;
@@ -104,7 +102,7 @@ function actualizarInterfaz() {
       cuerpoHistorial.appendChild(fila);
     });
 
-    // Renderizar Inversiones en la misma tabla de historial (o puedes separarlas si prefieres)
+    // 2. Renderizar Inversiones en el Historial
     const listaInversionesOrdenada = [...inversiones].reverse();
     listaInversionesOrdenada.forEach((i) => {
       const montoInv = parseFloat(i.montoInversion) || 0;
@@ -133,7 +131,7 @@ function actualizarInterfaz() {
   const balBs = incBs - gastBs;
   const balUsd = incUsd - gastUsd;
 
-  // 4. Pintar las tarjetas resumen del Dashboard
+  // 4. Actualizar las tarjetas del Dashboard
   elTotalIngresos.innerHTML = `${incBs.toFixed(2)} Bs <span style="font-size:0.9rem; color:var(--texto-secundario);">/ ${incUsd.toFixed(2)} $</span>`;
   elTotalGastos.innerHTML = `${gastBs.toFixed(2)} Bs <span style="font-size:0.9rem; color:var(--texto-secundario);">/ ${gastUsd.toFixed(2)} $</span>`;
   elBalanceActual.innerHTML = `${balBs.toFixed(2)} Bs <span style="font-size:0.9rem; color:var(--texto-secundario);">/ ${balUsd.toFixed(2)} $</span>`;
@@ -141,7 +139,7 @@ function actualizarInterfaz() {
 }
 
 // ==========================================================================
-// CAPTURA DE FORMULARIOS Y ENVÍO DIRECTO A LA NUBE
+// CAPTURA DE FORMULARIOS Y ENVÍO A LA NUBE
 // ==========================================================================
 formTransaccion.addEventListener('submit', (e) => {
   e.preventDefault();
@@ -232,7 +230,7 @@ document.getElementById('btnExportarExcel').addEventListener('click', () => {
     XLSX.utils.book_append_sheet(wb, wsInversiones, 'Inversiones');
   }
 
-  // Guardar archivo binario nativo de Excel (.xlsx) con pestañas separadas
+  // Guardar archivo .xlsx con la fecha de hoy
   const fechaHoy = new Date().toISOString().slice(0,10).replace(/-/g, '_');
   XLSX.writeFile(wb, `Contabilidad_Familiar_${fechaHoy}.xlsx`);
 });
