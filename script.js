@@ -2,7 +2,7 @@
 // CONFIGURACIÓN DE FIREBASE (CONEXIÓN EN LA NUBE EN TIEMPO REAL)
 // ==========================================================================
 // REEMPLAZA esta URL con la que te dé tu consola de Firebase Realtime Database:
-const BASE_DATOS_URL = "https://control-familiar-xxxxx-default-rtdb.firebaseio.com/";
+const BASE_DATOS_URL = "https://console.firebase.google.com/project/control-familiar-760ec/database/control-familiar-760ec-default-rtdb/data/~2F";
 
 const firebaseConfig = {
   databaseURL: BASE_DATOS_URL
